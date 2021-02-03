@@ -26,7 +26,8 @@ def GetTrialRange(prb_folder):
     for tName in tFiles:
         if (fnmatch.fnmatch(tName,'*.ap.bin')):
             parts = tName.split('_')
-            tparts = parts[2].split('.')
+            # tparts = parts[2].split('.')
+            tparts = parts[-1].split('.')  # In case there are other underscores in the name... HH2021
             tInd = int(tparts[0][1:])
             if tInd > maxIndex:
                 maxIndex = tInd
@@ -150,6 +151,7 @@ def GetProbeStr(tcat_name):
 def ParseCatGTLog(logPath, run_name, gate_string, prb_list):
 
     gfix_str = run_name + '_' + gate_string + ' Gfix'
+    print(logPath, gfix_str)
 
     num_probe = len(prb_list)
     gfix_edits = np.zeros(num_probe, dtype='float64')

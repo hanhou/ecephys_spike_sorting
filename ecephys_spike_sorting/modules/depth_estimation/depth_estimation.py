@@ -95,6 +95,10 @@ def find_surface_channel(lfp_data, ephys_params, params):
     """
     
     nchannels = ephys_params['num_channels']
+    
+    # Override channel number (has been changed to 385 by reading meta file in create_input_json.py)
+    nchannels = 384
+   
     sample_frequency = ephys_params['lfp_sample_rate']
 
     smoothing_amount = params['smoothing_amount']

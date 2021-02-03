@@ -45,12 +45,13 @@ def createInputJson(output_file,
                     ):
 
     # hard coded paths to code on your computer and system
-    ecephys_directory = r'D:\ecephys_fork\ecephys_spike_sorting\ecephys_spike_sorting'
-    kilosort_repository = r'C:\Users\labadmin\Documents\jic\KS2_MP_082520\Kilosort2'
-    npy_matlab_repository = r'C:\Users\labadmin\Documents\jic\npy-matlab-master'
-    catGTPath = r'C:\Users\labadmin\Documents\jic\CatGT'
-    tPrime_path=r'C:\Users\labadmin\Documents\jic\TPrimeApp\TPrime'
-    cWaves_path=r'C:\Users\labadmin\Documents\jic\C_Waves'
+    ecephys_directory = r'D:\Han_Sync\Svoboda\Scripts\Ephys\ecephys_spike_sorting\ecephys_spike_sorting'
+    # kilosort_repository = r'D:\Han_Sync\Svoboda\Scripts\Ephys\Kilosort'  # V2.5
+    kilosort_repository = r'D:\Han_Sync\Svoboda\Scripts\Ephys\Kilosort-2.0'
+    npy_matlab_repository = r'D:\Han_Sync\Svoboda\Scripts\Ephys\npy-matlab'
+    catGTPath = r'D:\Han_Sync\Svoboda\Scripts\Ephys\CatGT'
+    tPrime_path=r'D:\Han_Sync\Svoboda\Scripts\Ephys\TPrime'
+    cWaves_path=r'D:\Han_Sync\Svoboda\Scripts\Ephys\C_Waves'
     
     # set paths to KS2 master file to run; these should be appropriate for the
     # kilosort repository specified above
@@ -61,7 +62,7 @@ def createInputJson(output_file,
     # master_file_name = 'KS2ds_tracking_master_file.m' 
      
     # for config files and kilosort working space
-    kilosort_output_tmp = r'D:\kilosort_datatemp' 
+    kilosort_output_tmp = r'E:\KS2temp' 
     
     
     # derived directory names
@@ -97,6 +98,15 @@ def createInputJson(output_file,
             print('SpikeGLX params read from meta')
             print('probe type: {:s}, sample_rate: {:.5f}, num_channels: {:d}, uVPerBit: {:.4f}'.format\
                   (probe_type, sample_rate, num_channels, uVPerBit))
+            
+            # Override LFP file
+            lfp_file = continuous_file[:-6] + 'lf.bin'
+            print(f'lfp_file: {lfp_file}')
+            
+        else:
+            lfp_file = None 
+            print(f'lfp_file: {lfp_file}')
+                
         print('kilosort output directory: ' + kilosort_output_directory )
         # set Open Ephys specific dictionary keys; can't be null and still 
         # pass argshema parser, even when unused
@@ -188,7 +198,8 @@ def createInputJson(output_file,
             "reference_channels" : reference_channels,
             "vertical_site_spacing" : 10e-6,
             "ap_band_file" : continuous_file,
-            "lfp_band_file" : os.path.join(extracted_data_directory, 'continuous', 'Neuropix-' + acq_system + '-100.1', 'continuous.dat'),
+            # "lfp_band_file" : os.path.join(extracted_data_directory, 'continuous', 'Neuropix-' + acq_system + '-100.1', 'continuous.dat'),
+            "lfp_band_file" : lfp_file, 
             "reorder_lfp_channels" : True,
             "cluster_group_file_name" : 'cluster_group.tsv'
         }, 
@@ -204,18 +215,19 @@ def createInputJson(output_file,
             "hi_noise_thresh" : 50.0,
             "lo_noise_thresh" : 3.0,
             "save_figure" : 1,
-            "figure_location" : os.path.join(extracted_data_directory, 'probe_depth.png'),
-            "smoothing_amount" : 5,
-            "power_thresh" : 2.5,
-            "diff_thresh" : -0.06,
-            "freq_range" : [0, 10],
+            "json_location": os.path.join(kilosort_output_directory, 'lfp_surface.json'),
+            "figure_location" : os.path.join(kilosort_output_directory, 'lfp_surface.png'),
+            "smoothing_amount" : 3,
+            "power_thresh" : 0, # 2.5,
+            "diff_thresh" : -0.06, # -0.06,
+            "freq_range" : [0.1, 20],
             "max_freq" : 150,
             "channel_range" : [374, 384],
             "n_passes" : 10,
             "air_gap" : 25,
             "time_interval" : 5,
             "skip_s_per_pass" : 10,
-            "start_time" : 10
+            "start_time" : 3
         }, 
 
         "median_subtraction_params" : {
