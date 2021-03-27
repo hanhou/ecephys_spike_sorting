@@ -3,6 +3,7 @@ import os
 import logging
 import time
 
+
 import numpy as np
 import pandas as pd
 
@@ -17,18 +18,31 @@ def calculate_quality_metrics(args):
     print('ecephys spike sorting: quality metrics module')
 
     start = time.time()
+    
+    include_pcs = args['quality_metrics_params']['include_pcs']
 
     print("Loading data...")
 
     try:
-        spike_times, spike_clusters, spike_templates, amplitudes, templates, channel_map, \
-        channel_pos, clusterIDs, cluster_quality, cluster_amplitude, pc_features, pc_feature_ind, template_features = \
-                load_kilosort_data(args['directories']['kilosort_output_directory'], \
-                    args['ephys_params']['sample_rate'], \
-                    use_master_clock = False,
-                    include_pcs = True)
+        if include_pcs:
+            spike_times, spike_clusters, spike_templates, amplitudes, templates, channel_map, \
+            channel_pos, clusterIDs, cluster_quality, cluster_amplitude, pc_features, pc_feature_ind, template_features = \
+                    load_kilosort_data(args['directories']['kilosort_output_directory'], \
+                        args['ephys_params']['sample_rate'], \
+                        use_master_clock = False,
+                        include_pcs = include_pcs)
+        else:
+            spike_times, spike_clusters, spike_templates, amplitudes, templates, channel_map, \
+            channel_pos, clusterIDs, cluster_quality, cluster_amplitude = \
+            load_kilosort_data(args['directories']['kilosort_output_directory'], \
+                        args['ephys_params']['sample_rate'], \
+                        use_master_clock = False,
+                        include_pcs = include_pcs)
+            pc_features = []
+            pc_feature_ind = []
+            
 
-        metrics = calculate_metrics(spike_times, spike_clusters, amplitudes, channel_map, channel_pos, pc_features, pc_feature_ind, args['quality_metrics_params'])
+        metrics = calculate_metrics(spike_times, spike_clusters, amplitudes, channel_map, channel_pos, templates, pc_features, pc_feature_ind, args['quality_metrics_params'])
 
     except FileNotFoundError:
         
@@ -39,7 +53,7 @@ def calculate_quality_metrics(args):
         return {"execution_time" : execution_time,
             "quality_metrics_output_file" : None} 
 
-
+    
     output_file = args['cluster_metrics']['cluster_metrics_file']
 
     if os.path.exists(args['waveform_metrics']['waveform_metrics_file']):

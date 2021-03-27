@@ -1,11 +1,12 @@
 from argschema import ArgSchemaParser
 import os
+import sys
 import subprocess
-import logging
 import time
 
 import numpy as np
 import pandas as pd
+from scipy.io import loadmat
 
 from ...common.utils import load_kilosort_data
 
@@ -30,7 +31,15 @@ def calculate_mean_waveforms(args):
         clus_lbl_npy = os.path.join(args['directories']['kilosort_output_directory'], 'spike_clusters.npy' )
         dest, wavefile = os.path.split(args['mean_waveform_params']['mean_waveforms_file'])
         
-        exe_path = os.path.join(args['mean_waveform_params']['cWaves_path'], 'C_Waves.exe')
+        
+        # path to the 'runit.bat' executable that calls C_Waves.
+        # Essential in linux where C_Waves executable is only callable through runit
+        if sys.platform.startswith('win'):
+            exe_path = os.path.join(args['mean_waveform_params']['cWaves_path'], 'runit.bat')
+        elif sys.platform.startswith('linux'):
+            exe_path = os.path.join(args['mean_waveform_params']['cWaves_path'], 'runit.sh')
+        else:
+            print('unknown system, cannot run C_Waves')
         
         cwaves_cmd = exe_path + ' -spikeglx_bin=' + spikeglx_bin + \
                                 ' -clus_table_npy=' + clus_table_npy + \
@@ -60,6 +69,20 @@ def calculate_mean_waveforms(args):
         # read in inverse of whitening matrix
         w_inv = np.load((os.path.join(args['directories']['kilosort_output_directory'], 'whitening_mat_inv.npy')))
         
+        # the channel_pos loaded from the phy output omits any sites excluded
+        # as noise by the kilosort_helper module, or excluded fow low spike rete
+        # by kilosort itself. The waveform metrics are calculated on ALL sites
+        # based on the mean waveforms calculated for each unit; therefore
+        # we need the site locations for all sites.
+        # load the channel map associated with this kilosort run; in kilosort_helper
+        # a copy is made next to the data file
+        input_file = args['ephys_params']['ap_band_file']
+        dat_dir, dat_fname = os.path.split(input_file)
+        dat_name, dat_ext = os.path.splitext(dat_fname)
+        chanMapMat = os.path.join(dat_dir, (dat_name +'_chanMap.mat'))
+        site_x = np.squeeze(loadmat(chanMapMat)['xcoords'])
+        site_y = np.squeeze(loadmat(chanMapMat)['ycoords'])
+        
                 
         mean_waveform_fullpath = os.path.join(dest, 'mean_waveforms.npy')
         snr_fullpath = os.path.join(dest, 'cluster_snr.npy')
@@ -73,6 +96,7 @@ def calculate_mean_waveforms(args):
                     args['ephys_params']['sample_rate'], \
                     args['ephys_params']['vertical_site_spacing'], \
                     w_inv, \
+                    site_x, site_y, \
                     args['mean_waveform_params'])
                 
         metrics.to_csv(args['waveform_metrics']['waveform_metrics_file'])      

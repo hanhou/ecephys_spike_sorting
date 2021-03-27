@@ -12,21 +12,24 @@ from create_input_json import createInputJson
 json_directory = r'D:\ecephys_fork\json_files'
 
 # directory with the raw data files. The metadata should be present, also
-npx_directory = r'D:\ecephys_fork\test_data\test_no_preprocess'
+#npx_directory = r'D:\ecephys_fork\test_data\test_no_preprocess'
 
 
-# list of run names
+# list of paths to binary files
 
  
-run_names = [												
-						'SC011_022319_g0_tcat.imec3.ap.bin',
+run_paths = [												
 
+             r'E:\UHD_ALM_midbrain\catgt_SC039_071020_g0\SC039_071020_g0_imec0\SC039_071020_g0_tcat.imec0.ap.bin'
 ]
 
 
-probe_type = 'NP1'
 
-
+run_seed = 1
+# kilosort2 params specific to UHD probes
+whiteningRange = 256;
+nNeighbors = 96;
+minfr_goodchannels = 0;
 
 # List of modules to run per probe
 # if not running kilosort_helper, KS2 output must be in directories
@@ -34,11 +37,14 @@ probe_type = 'NP1'
 modules = [
 			'kilosort_helper',
             'kilosort_postprocessing',
-            'noise_templates'
+            #'noise_templates',
+            'mean_waveforms'
+            #'quality_metrics'
 		  ]
 
-for name in run_names:
-
+for path in run_paths:
+    npx_directory = os.path.dirname(path)
+    name = os.path.basename(path)
     baseName = SpikeGLX_utils.ParseTcatName(name)
     prbStr = SpikeGLX_utils.GetProbeStr(name)   # returns empty string for 3A
     session_id = baseName
@@ -50,7 +56,7 @@ for name in run_names:
         os.mkdir(kilosort_output_parent)
         
     # output subdirectory
-    outputName = 'imec' + prbStr + '_ks2'
+    outputName = 'imec' + prbStr + '_nN_' + str(nNeighbors) + '_ks2'
     
     kilosort_output_dir = os.path.join(kilosort_output_parent, outputName)
 
@@ -67,13 +73,18 @@ for name in run_names:
         ks_make_copy = False
     
     print( 'Creating json file for KS2 and postprocessing')
+    print( 'npx_directory:', npx_directory)
+    print( 'continuous file: ', os.path.join(npx_directory,name) )
     info = createInputJson(input_json, npx_directory=npx_directory, 
 	                                   continuous_file = os.path.join(npx_directory,name),
                                        spikeGLX_data = 'True',
 									   kilosort_output_directory=kilosort_output_dir, 
                                        ks_make_copy = ks_make_copy,
                                        extracted_data_directory = npx_directory,
-                                       noise_template_use_rf = False
+                                       noise_template_use_rf = False,
+                                       CSBseed = run_seed,
+                                       nNeighbors = nNeighbors,
+                                       minfr_goodchannels = 0
                                        )
    
  
