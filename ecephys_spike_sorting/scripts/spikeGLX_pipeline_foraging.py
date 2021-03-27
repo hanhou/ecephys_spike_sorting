@@ -27,8 +27,7 @@ logName = 'groundTruth_log.csv'
 
 # Raw data directory = npx_directory
 # run_specs = name, gate, trigger and probes to process
-npx_directory = r'D:\Data\Ephys\HH102'    #!!!
-# npx_directory = r'F:\ephys_raw\HH102'    #!!!
+npx_directory = r'D:\Data\Ephys\HH09'    #!!!
 
 # Each run_spec is a list of 4 strings:
 #   undecorated run name (no g/t specifier, the run field in CatGT)
@@ -39,7 +38,7 @@ npx_directory = r'D:\Data\Ephys\HH102'    #!!!
 #   probes to process, as a string, e.g. '0', '0,3', '0:3'
 
 run_specs = [			#!!!							
-                        # ['GroundTruth01', '0', 'start,end', '0'],
+                        ['Foraging_ephys_dummy01', '0', 'start,end', '0'],
                         # ['GroundTruth02', '0', 'start,end', '0'],
                         # ['GroundTruth03', '0', 'start,end', '0'],
                         # ['GroundTruth04', '0', 'start,end', '0'],
@@ -71,12 +70,12 @@ run_specs = [			#!!!
 # run_folder/probe_folder/*.bin
 # catGT_dest = r'E:\catGT\HH100'       #!!!
 # catGT_dest = r'E:\catGT\HH101_noGFix'       #!!!
-catGT_dest = r'F:\catGT\HH102'       #!!!
+catGT_dest = r'F:\catGT\HH09'       #!!!
 
 # ------------
 # CatGT params
 # ------------
-run_CatGT = True   # set to False to sort/process previously processed data.  #!!!
+run_CatGT = True  # set to False to sort/process previously processed data.  #!!!
 # catGT streams to process, e.g. just '-ap' for ap band only, '-ap -ni' for
 # ap plus ni aux inputs
 catGT_stream_string = '-ap -ni -lf'
@@ -84,12 +83,25 @@ catGT_stream_string = '-ap -ni -lf'
 # CatGT command string includes all instructions for catGT operations
 # Note 1: directory naming in this script requires -prb_fld and -out_prb_fld
 # Note 2: this command line includes specification of edge extraction
-# see CatGT readme for details (https://billkarsh.github.io/SpikeGLX/help/syncEdges/Sync_edges/)
-# catGT_cmd_string = '-prb_fld -out_prb_fld -gbldmx -gfix=0,0.10,0.02 -SY=0,384,6,500 -XA=1,1,3,500 -XD=2,0,0 -XD=2,1,10 -XD=2,1,50 -XD=2,1,1200'   #!!!
+# see CatGT readme for details https://billkarsh.github.io/SpikeGLX/help/syncEdges/Sync_edges/
+# catGT_cmd_string = '-prb_fld -out_prb_fld -gbldmx -gfix=0,0.10,0.02 -SY=0,384,6,500 -XA=1,1,3,500 -XD=2,0,0 -XD=2,1,10 -XD=2,1,50 -XD=2,1,1200'
 # catGT_cmd_string = '-prb_fld -out_prb_fld -gbldmx -gfix=100,0.10,0.04 -SY=0,384,6,500 -XA=1,1,3,500 -XD=2,0,0 -XD=2,1,10 -XD=2,1,50 -XD=2,1,1200'   #!!!  # Non gfix. HH100, HH101
 
-# Note the order of NI files: XA analogs, then XD digital words. So if I have four XA channels, the XD will be #5 (4 in zero-based). Therefor -XD = 4, ...
-catGT_cmd_string = '-prb_fld -out_prb_fld -gbldmx -gfix=100,0.10,0.04 -SY=0,384,6,500 -XA=1,1,3,500 -XA=3,0.1,0.5,2 -XD=4,0,0 -XD=4,1,100'   #!!!  # Non gfix. HH102 (laser power in XA2,3, no bit code, 100 ms sample period)
+#!!! Note the order of NI files: XA analogs, then XD digital words. So if I have four XA channels, the XD will be #5 (4 in zero-based). Therefor -XD = 4, ...
+# All pulse duration has +/- 20% tolerance
+catGT_cmd_string = ('-prb_fld -out_prb_fld '   # Mandatory
+                    '-aphipass=300 -aplopass=9000 '   # Filters (from Dave)
+                    '-gbldmx -gfix=0.4,0.10,0.02 '    # peak >={a} mV, rising speed >={b}mV/sample-tick, back threshold {c} mV (from Dave). https://billkarsh.github.io/SpikeGLX/help/dmx_vs_gbl/dmx_vs_gbl/
+                    '-SY=0,384,6,500 '  # Sync pulse in imec file: probe #{a=imec0}, channel# {b=last channel in AP file, ie #384), #bit {c=#6 for 3B probe), pulse width {d=500} ms
+                    '-XA=1,1,3,500 '    # Sync pulse in nidq file: word {a=1 in Dave's rig now}, threshold {b=1}V, min {c=3}V, pulse width {d=500} ms 
+                    '-XD=4,0,1 '    # Dig marker (L choice): word {a=4, because I have 4 XA channels before XD}, bit {b=0, first channel}, pulse width {c=1} ms
+                    '-XD=4,0,2 '    # Dig marker (R_choice): word {a=4, because I have 4 XA channels before XD}, bit {b=0, first channel}, pulse width {c=1} ms
+                    '-XD=4,1,2 '   # Dig marker (start of bit code): word 4, bit 1, 2 ms
+                    '-XD=4,1,1 '   # Dig marker (actual bit code): 1 ms width
+                    '-XD=4,1,10 '   # Dig marker (go cue): 10 ms width
+                    '-XD=4,1,20 '   # Dig marker (reward): 20 ms width
+                    '-XD=4,1,0'   # Dig marker (ITI): random durations                    
+                    ) 
 
 # ----------------------
 # psth_events parameters
@@ -97,14 +109,17 @@ catGT_cmd_string = '-prb_fld -out_prb_fld -gbldmx -gfix=100,0.10,0.04 -SY=0,384,
 # extract param string for psth events -- copy the CatGT params used to extract
 # events that should be exported with the phy output for PSTH plots
 # If not using, remove psth_events from the list of modules
+# Note that there must be no dash '-'!!!
 # event_ex_param_str = 'XD=2,1,1200'  # HH100, HH101, no laser power
-event_ex_param_str = 'XA=3,0.1,0.5,2'  # HH102, laser power
+event_ex_param_str = 'XD=4,1,10'  # Go cue
 
 # -----------------
 # TPrime parameters
 # -----------------
 runTPrime = True   # set to False if not using TPrime
 sync_period = 1.0   # true for SYNC wave generated by imec basestation
+
+# Map all times to probe-0 (including event markers and spike times!!)
 toStream_sync_params = 'SY=0,384,6,500' # copy from the CatGT command line, no spaces
 niStream_sync_params = 'XA=1,1,3,500'   # copy from the CatGT comman line, set to None if no Aux data, no spaces
 
@@ -113,13 +128,13 @@ niStream_sync_params = 'XA=1,1,3,500'   # copy from the CatGT comman line, set t
 # ---------------
 # List of modules to run per probe; CatGT and TPrime are called once for each run.
 modules = [    #!!! 
-            # 'depth_estimation',
+            'depth_estimation',
  			'kilosort_helper',              # Run Kilosort 2
             'kilosort_postprocessing',        # Duplicate spike removal
             'noise_templates',                # Noise cluster ID
-            # 'psth_events',                    # PSTH events for phy event_view plugin
-            # 'mean_waveforms',                 # 
-            # 'quality_metrics'
+            'psth_events',                    # PSTH events for phy event_view plugin
+            'mean_waveforms',                 # 
+            'quality_metrics'
 			]
 
 json_directory = r'F:\json_file'
