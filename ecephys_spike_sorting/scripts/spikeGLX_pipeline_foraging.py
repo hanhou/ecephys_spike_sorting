@@ -128,7 +128,7 @@ niStream_sync_params = 'XA=1,1,3,500'   # copy from the CatGT comman line, set t
 # ---------------
 # List of modules to run per probe; CatGT and TPrime are called once for each run.
 modules = [    #!!! 
-            'depth_estimation',
+            # 'depth_estimation',
  			'kilosort_helper',              # Run Kilosort 2
             'kilosort_postprocessing',        # Duplicate spike removal
             'noise_templates',                # Noise cluster ID
