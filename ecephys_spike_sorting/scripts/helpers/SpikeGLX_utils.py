@@ -26,7 +26,7 @@ def GetTrialRange(prb, gate, prb_folder):
     searchStr = '_g' + gate + '_t'
     for tName in tFiles:
         if (fnmatch.fnmatch(tName,'*.ap.bin')):
-            
+           
             gPos = tName.find(searchStr)
             tStart = gPos + len(searchStr)
             tEnd = tName.find('.', tStart)
@@ -88,7 +88,11 @@ def Chan0_uVPerBit(meta):
     # plus a final empty entry following the last ')'
     # channel zero is the 2nd element in the list
 
-    if 'imDatPrb_dock' in meta:
+    # if 'imDatPrb_dock' in meta:
+    # This is no longer a proper criterion of NP 2.0 (my NP1.0 meta files also have this)
+    # Instead, should use imDatPrb_type: {0=NP1.0, 21=NP2.0(1-shank), 24=NP2.0(4-shank)}.
+    # https://github.com/billkarsh/SpikeGLX/blob/master/Markdown/Metadata_30.md
+    if int(meta['imDatPrb_type']) > 0:  
         # NP 2.0; APGain = 80 for all channels
         # voltage range = 1V
         # 14 bit ADC
@@ -165,6 +169,7 @@ def GetProbeStr(tcat_name):
 def ParseCatGTLog(logPath, run_name, gate_string, prb_list):
 
     gfix_str = run_name + '_' + gate_string + ' Gfix'
+    print(logPath, gfix_str)
 
     num_probe = len(prb_list)
     gfix_edits = np.zeros(num_probe, dtype='float64')
