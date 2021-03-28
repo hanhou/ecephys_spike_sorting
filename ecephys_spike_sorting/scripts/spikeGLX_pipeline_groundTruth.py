@@ -27,7 +27,7 @@ logName = 'groundTruth_log.csv'
 
 # Raw data directory = npx_directory
 # run_specs = name, gate, trigger and probes to process
-npx_directory = r'D:\Data\Ephys\HH102'    #!!!
+npx_directory = r'D:\Data\Ephys\HH101'    #!!!
 # npx_directory = r'F:\ephys_raw\HH102'    #!!!
 
 # Each run_spec is a list of 4 strings:
@@ -46,7 +46,7 @@ run_specs = [			#!!!
                         # ['GroundTruth04_3500um', '0', 'start,end', '0'],
                         # ['GroundTruth05_3500um', '0', 'start,end', '0'],
                         # ['GroundTruth06_dual_bilateral', '0', 'start,end', '1'],
-                        # ['GroundTruth06_dual_Left', '0', 'start,end', '0:1'],
+                        ['GroundTruth06_dual_Left', '0', 'start,end', '0:1'],
                         # ['GroundTruth06_dual_Right', '0', 'start,end', '0:1'],
                         # ['HH102S01_C01P01', '0','0,1','0'],    # It's a bug that if there is only one file (g0_t0) we should use '0,1' in order to also transfer the LFP file!!! HH
                         # ['HH102S01_C01P02', '0','0,1','0'],
@@ -71,7 +71,8 @@ run_specs = [			#!!!
 # run_folder/probe_folder/*.bin
 # catGT_dest = r'E:\catGT\HH100'       #!!!
 # catGT_dest = r'E:\catGT\HH101_noGFix'       #!!!
-catGT_dest = r'F:\catGT\HH102'       #!!!
+# catGT_dest = r'F:\catGT\HH102'       #!!!
+catGT_dest = r'E:\catGT\HH101_noGFix_multipleFromStreams'
 
 # ------------
 # CatGT params
@@ -89,7 +90,10 @@ catGT_stream_string = '-ap -ni -lf'
 # catGT_cmd_string = '-prb_fld -out_prb_fld -gbldmx -gfix=100,0.10,0.04 -SY=0,384,6,500 -XA=1,1,3,500 -XD=2,0,0 -XD=2,1,10 -XD=2,1,50 -XD=2,1,1200'   #!!!  # Non gfix. HH100, HH101
 
 # Note the order of NI files: XA analogs, then XD digital words. So if I have four XA channels, the XD will be #5 (4 in zero-based). Therefor -XD = 4, ...
-catGT_cmd_string = '-prb_fld -out_prb_fld -gbldmx -gfix=100,0.10,0.04 -SY=0,384,6,500 -XA=1,1,3,500 -XA=3,0.1,0.5,2 -XD=4,0,0 -XD=4,1,100'   #!!!  # Non gfix. HH102 (laser power in XA2,3, no bit code, 100 ms sample period)
+catGT_cmd_string = ('-prb_fld -out_prb_fld -gbldmx -gfix=100,0.10,0.04 ' #!!!  # Non gfix. HH102 (laser power in XA2,3, no bit code, 100 ms sample period)
+                    '-SY=0,384,6,500 -SY=1,384,6,500 '    # The second is key for aligning spike_time.npy in imec1 to imec0!!!
+                    '-XA=1,1,3,500 -XA=3,0.1,0.5,2 -XD=4,0,0 -XD=4,1,100'   
+                    )
 
 # ----------------------
 # psth_events parameters
