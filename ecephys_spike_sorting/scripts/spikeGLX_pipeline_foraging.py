@@ -28,6 +28,7 @@ logName = 'foraging_ephys_log.csv'
 # Raw data directory = npx_directory
 # run_specs = name, gate, trigger and probes to process
 npx_directory = r'D:\Data\Ephys\HH09'    #!!!
+# npx_directory = r'F:'
 
 # Each run_spec is a list of 4 strings:
 #   undecorated run name (no g/t specifier, the run field in CatGT)
@@ -40,7 +41,9 @@ npx_directory = r'D:\Data\Ephys\HH09'    #!!!
 run_specs = [			#!!!							
                         # ['HH09_20210406', '0', 'start,end', '0'],
                         # ['HH09_20210416', '0', 'start,end', '0:1'],
-                        ['HH09_20210418', '0', 'start,end', '0:1'],
+                        # ['HH09_20210418', '0', 'start,end', '0:1'],
+                        # ['HH09_20210419', '0', 'start,end', '0:1'],
+                        ['HH09_20210429', '0', 'start,end', '0:1'],
                         # ['GroundTruth02', '0', 'start,end', '0'],
                         # ['GroundTruth03', '0', 'start,end', '0'],
                         # ['GroundTruth04', '0', 'start,end', '0'],
@@ -93,7 +96,7 @@ catGT_stream_string = '-ap -ni -lf'
 # All pulse duration has +/- 20% tolerance
 
 n_XAs = 3  # Number of analog channels
-ni_sync = 'XA=0,1,3,500'      # Sync channel in NIDQ
+ni_sync = f'XD={n_XAs},0,500'      # Sync channel in NIDQ
 main_npx_sync = 'SY=0,384,6,500'   # Sync channel in the main NPX (to whom NI and all other NPX channels will be mapped, typically imec0)
 other_npx_sync = '-SY=1,384,6,500'   # Other imec channels!!!
 
@@ -102,13 +105,13 @@ catGT_cmd_string = ('-prb_fld -out_prb_fld '   # Mandatory
                     '-gbldmx -gfix=0.4,0.10,0.02 '    # peak >={a} mV, rising speed >={b}mV/sample-tick, back threshold {c} mV (from Dave). https://billkarsh.github.io/SpikeGLX/help/dmx_vs_gbl/dmx_vs_gbl/
                     f'-{main_npx_sync} '  # Sync pulse in imec file: probe #{a=imec0}, channel# {b=last channel in AP file, ie #384), #bit {c=#6 for 3B probe), pulse width {d=500} ms
                     f'-{ni_sync} '    # Sync pulse in nidq file: word {a=1 in Dave's rig now}, threshold {b=1}V, min {c=3}V, pulse width {d=500} ms 
-                    f'-XD={n_XAs},0,1 '    # Dig marker (L choice): word {a=4, because I have 4 XA channels before XD}, bit {b=0, first channel}, pulse width {c=1} ms
-                    f'-XD={n_XAs},0,2 '    # Dig marker (R_choice): word {a=4, because I have 4 XA channels before XD}, bit {b=0, first channel}, pulse width {c=1} ms
-                    f'-XD={n_XAs},1,2 '   # Dig marker (start of bit code): word 4, bit 1, 2 ms
-                    f'-XD={n_XAs},1,1 '   # Dig marker (actual bit code): 1 ms width
-                    f'-XD={n_XAs},1,10 '   # Dig marker (go cue): 10 ms width
-                    f'-XD={n_XAs},1,20 '   # Dig marker (reward): 20 ms width
-                    f'-XD={n_XAs},1,0 '   # Dig marker (ITI): random durations                    
+                    f'-XD={n_XAs},2,1 '   # Dig marker (actual bit code): 1 ms width
+                    f'-XD={n_XAs},2,2 '   # Dig marker (start of bit code): word 4, bit 1, 2 ms
+                    # f'-XD={n_XAs},1,2 '   # Dig marker (Choice_L): 3 ms width
+                    f'-XD={n_XAs},2,3 '   # Dig marker (Choice_R): 3.5 ms
+                    f'-XD={n_XAs},2,10 '   # Dig marker (go cue): 10 ms width
+                    f'-XD={n_XAs},2,20 '   # Dig marker (reward): 20 ms width
+                    f'-XD={n_XAs},2,30 '   # Dig marker (ITI start): 30 ms               
                     f'{other_npx_sync} '
                     ) 
 
@@ -120,7 +123,7 @@ catGT_cmd_string = ('-prb_fld -out_prb_fld '   # Mandatory
 # If not using, remove psth_events from the list of modules
 # Note that there must be no dash '-'!!!
 # event_ex_param_str = 'XD=2,1,1200'  # HH100, HH101, no laser power
-event_ex_param_str = f'XD={n_XAs},1,10'  # Go cue
+event_ex_param_str = f'XD={n_XAs},2,10'  # Go cue
 
 # -----------------
 # TPrime parameters
