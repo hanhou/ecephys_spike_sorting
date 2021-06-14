@@ -43,9 +43,10 @@ run_specs = [			#!!!
                         # ['HH09_20210416', '0', 'start,end', '0:1'],
                         # ['HH09_20210418', '0', 'start,end', '0:1'],
                         # ['HH09_20210419', '0', 'start,end', '0:1'],
-                       #  ['HH09_S06_20210609', '0', 'start,end', '0:1'],
-                        ['HH09_S08_20210612', '0', 'start,end', '0:1'],
-
+                          ['HH09_S06_20210609', '0', 'start,end', '0:1'],
+                        # ['HH09_S07_20210611_surface', '0', 'start,end', '0:1'],
+                          ['HH09_S08_20210612', '0', 'start,end', '0:1'],
+                          #['Foraging_ephys_dummy01', '0', 'start,end', '0'],
 ]
 
 # ------------------
@@ -83,7 +84,7 @@ other_npx_sync = '-SY=1,384,6,500'   # Other imec channels!!!
 
 catGT_cmd_string = ('-prb_fld -out_prb_fld '   # Mandatory
                     '-aphipass=300 -aplopass=9000 '   # Filters (from Dave)
-                    #'-lfhipass=0.1 -lflopass=300 '
+                    '-lfhipass=0.1 -lflopass=300 '
                     '-gbldmx -gfix=0.4,0.10,0.02 '    # peak >={a} mV, rising speed >={b}mV/sample-tick, back threshold {c} mV (from Dave). https://billkarsh.github.io/SpikeGLX/help/dmx_vs_gbl/dmx_vs_gbl/
                     f'-{main_npx_sync} '  # Sync pulse in imec file: probe #{a=imec0}, channel# {b=last channel in AP file, ie #384), #bit {c=#6 for 3B probe), pulse width {d=500} ms
                     f'-{ni_sync} '    # Sync pulse in nidq file: word {a=1 in Dave's rig now}, threshold {b=1}V, min {c=3}V, pulse width {d=500} ms

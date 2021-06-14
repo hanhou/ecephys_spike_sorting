@@ -15,8 +15,8 @@ def create_samba_directory(samba_server, samba_share):
 
     return data_dir
 
-def createInputJson(output_file, 
-                    npx_directory=None, 
+def createInputJson(output_file,
+                    npx_directory=None,
                     continuous_file = None,
                     spikeGLX_data=True,
                     extracted_data_directory=None,
@@ -49,26 +49,26 @@ def createInputJson(output_file,
     # kilosort_repository = r'D:\Han_Sync\Svoboda\Scripts\Ephys\Kilosort'  # V2.5
     kilosort_repository = r'D:\Han_Sync\Svoboda\Scripts\Ephys\Kilosort-2.0'
     npy_matlab_repository = r'D:\Han_Sync\Svoboda\Scripts\Ephys\npy-matlab'
-    catGTPath = r'D:\Han_Sync\Svoboda\Scripts\Ephys\CatGT'
+    catGTPath = r'D:\Han_Sync\Svoboda\Scripts\Ephys\CatGT_1.3'
     tPrime_path=r'D:\Han_Sync\Svoboda\Scripts\Ephys\TPrime'
     cWaves_path=r'D:\Han_Sync\Svoboda\Scripts\Ephys\C_Waves'
-    
+
     # set paths to KS2 master file to run; these should be appropriate for the
     # kilosort repository specified above
     # default inside the ecephys pipeline are:
     master_file_path = os.path.join(ecephys_directory,'modules','kilosort_helper')
-    master_file_name = 'kilosort2_master_file.m'          
+    master_file_name = 'kilosort2_master_file.m'
     # master_file_path = r'D:\ecephys_fork\ecephys_spike_sorting\ecephys_spike_sorting\scripts'
-    # master_file_name = 'KS2ds_tracking_master_file.m' 
-     
+    # master_file_name = 'KS2ds_tracking_master_file.m'
+
     # for config files and kilosort working space
-    kilosort_output_tmp = r'E:\KS2temp' 
-    
-    
+    kilosort_output_tmp = r'E:\KS2temp'
+
+
     # derived directory names
-    
+
     modules_directory = os.path.join(ecephys_directory,'modules')
-    
+
     if kilosort_output_directory is None \
          and extracted_data_directory is None \
          and npx_directory is None:
@@ -77,53 +77,53 @@ def createInputJson(output_file,
 
     #default ephys params. For spikeGLX, these get replaced by values read from metadata
     sample_rate = 30000
-    num_channels = 384    
+    num_channels = 384
     reference_channels = [191]
     uVPerBit = 2.34375
     acq_system = 'PXI'
-     
-    
+
+
     if spikeGLX_data:
         # location of the raw data is the continuous file passed from script
         # metadata file should be located in same directory
-        # 
+        #
         # kilosort output will be put in the same directory as the input raw data,
         # set in kilosort_output_directory passed from script
         # kilososrt postprocessing (duplicate removal) and identification of noise
         # clusters will act on phy output in the kilosort output directory
         #
-        # 
+        #
         if continuous_file is not None:
-            probe_type, sample_rate, num_channels, uVPerBit = SpikeGLX_utils.EphysParams(continuous_file)  
+            probe_type, sample_rate, num_channels, uVPerBit = SpikeGLX_utils.EphysParams(continuous_file)
             print('SpikeGLX params read from meta')
             print('probe type: {:s}, sample_rate: {:.5f}, num_channels: {:d}, uVPerBit: {:.4f}'.format\
                   (probe_type, sample_rate, num_channels, uVPerBit))
-            
+
             # Override LFP file
             lfp_file = continuous_file[:-6] + 'lf.bin'
             print(f'lfp_file: {lfp_file}')
-            
+
         else:
-            lfp_file = None 
+            lfp_file = None
             print(f'lfp_file: {lfp_file}')
-                
+
         print('kilosort output directory: ' + kilosort_output_directory )
-        # set Open Ephys specific dictionary keys; can't be null and still 
+        # set Open Ephys specific dictionary keys; can't be null and still
         # pass argshema parser, even when unused
         settings_json = npx_directory
         probe_json = npx_directory
         settings_xml = npx_directory
-        
+
     else:
     # Data from Open Ephys; these params are sent manually from script
-    
+
         if probe_type == '3A':
             acq_system = '3a'
             reference_channels = [36, 75, 112, 151, 188, 227, 264, 303, 340, 379]
             uVPerBit = 2.34375      # for AP gain = 500
         elif (probe_type =='NP1' or probe_type =='3B2'):
             acq_system = 'PXI'
-            reference_channels = [191] 
+            reference_channels = [191]
             uVPerBit = 2.34375      # for AP gain = 500
         elif (probe_type == 'NP21' or probe_type == 'NP24'):
             acq_system = 'PXI'
@@ -131,7 +131,7 @@ def createInputJson(output_file,
             uVPerBit = 0.763      # for AP gain = 80, fixed in 2.0
         else:
             raise Exception('Unknown probe type')
-        
+
         if npx_directory is not None:
             settings_xml = os.path.join(npx_directory, 'settings.xml')
             if extracted_data_directory is None:
@@ -148,23 +148,23 @@ def createInputJson(output_file,
                 settings_json = None
                 probe_json = None
                 extracted_data_directory = kilosort_output_directory
-    
+
         if kilosort_output_directory is None:
             kilosort_output_directory = os.path.join(extracted_data_directory, 'continuous', 'Neuropix-' + acq_system + '-100.0')
-    
+
         if continuous_file is None:
             continuous_file = os.path.join(kilosort_output_directory, 'continuous.dat')
-            
 
-        
+
+
 
     # Create string designating temporary output file for KS2 (gets inserted into KS2 config.m file)
     fproc = os.path.join(kilosort_output_tmp,'temp_wh.dat') # full path for temp whitened data file
     fproc_forward_slash = fproc.replace('\\','/')
     fproc_str = "'" + fproc_forward_slash + "'"
-    
 
-    
+
+
     dictionary = \
     {
 
@@ -184,7 +184,7 @@ def createInputJson(output_file,
         "waveform_metrics" : {
             "waveform_metrics_file" : os.path.join(kilosort_output_directory, 'waveform_metrics.csv')
         },
-        
+
         "cluster_metrics" : {
             "cluster_metrics_file" : os.path.join(kilosort_output_directory, 'metrics.csv')
         },
@@ -199,10 +199,10 @@ def createInputJson(output_file,
             "vertical_site_spacing" : 10e-6,
             "ap_band_file" : continuous_file,
             # "lfp_band_file" : os.path.join(extracted_data_directory, 'continuous', 'Neuropix-' + acq_system + '-100.1', 'continuous.dat'),
-            "lfp_band_file" : lfp_file, 
+            "lfp_band_file" : lfp_file,
             "reorder_lfp_channels" : True,
             "cluster_group_file_name" : 'cluster_group.tsv'
-        }, 
+        },
 
         "extract_from_npx_params" : {
             "npx_directory": npx_directory,
@@ -228,7 +228,7 @@ def createInputJson(output_file,
             "time_interval" : 5,
             "skip_s_per_pass" : 10,
             "start_time" : 3
-        }, 
+        },
 
         "median_subtraction_params" : {
             "median_subtraction_executable": "C:\\Users\\svc_neuropix\\Documents\\GitHub\\spikebandmediansubtraction\\Builds\\VisualStudio2013\\Release\\SpikeBandMedianSubtraction.exe",
@@ -277,19 +277,19 @@ def createInputJson(output_file,
         },
 
         "mean_waveform_params" : {
-        
+
             "mean_waveforms_file" : os.path.join(kilosort_output_directory, 'mean_waveforms.npy'),
             "samples_per_spike" : 82,
             "pre_samples" : 20,
             "num_epochs" : 1,           #epochs not implemented for c_waves
             "spikes_per_epoch" : 1000,
             "spread_threshold" : 0.12,
-            "site_range" : 16,    
+            "site_range" : 16,
             "cWaves_path" : cWaves_path,
             "use_C_Waves" : True,
             "snr_radius" : 8
         },
-            
+
 
         "noise_waveform_params" : {
             "classifier_path" : os.path.join(modules_directory, 'noise_templates', 'rf_classifier.pkl'),
@@ -308,7 +308,7 @@ def createInputJson(output_file,
             "drift_metrics_interval_s" : 51,
             "drift_metrics_min_spikes_per_interval" : 10
         },
-        
+
         "catGT_helper_params" : {
             "run_name" : catGT_run_name,
             "gate_string" : gate_string,
@@ -327,12 +327,12 @@ def createInputJson(output_file,
                 "ni_sync_params" : niStream_sync_params,
                 "toStream_path_3A" : toStream_path_3A,
                 "fromStream_list_3A" : fromStream_list_3A
-                },  
-                
+                },
+
         "psth_events": {
                 "event_ex_param_str": event_ex_param_str
                 }
-        
+
     }
 
     with io.open(output_file, 'w', encoding='utf-8') as f:
