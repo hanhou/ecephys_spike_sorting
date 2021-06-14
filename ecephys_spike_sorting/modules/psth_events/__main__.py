@@ -46,7 +46,7 @@ def get_psth_events(args):
             ex_file_name = run_name + ex_name_str + '.txt'
             ex_path = os.path.join(run_fld, ex_file_name)
     else:
-        # 3B/NP1.0/NP2.0, assume run and probe folders  
+        # 3B/NP1.0/NP2.0, assume run and probe folders
         prb_fld, bin_name = os.path.split(input_file)
         run_fld, prb_fld_name = os.path.split(prb_fld)
         parent_fld, run_fld_name = os.path.split(run_fld)
@@ -59,12 +59,12 @@ def get_psth_events(args):
             # nidq channel
             ex_file_name = run_name + '_tcat.nidq.' + ex_name_str + '.txt'
             file_list = os.listdir(run_fld)
-            flt_list = fnmatch.filter(file_list, ex_file_name)      
+            flt_list = fnmatch.filter(file_list, ex_file_name)
             if len(flt_list) != 1:
                 print('No edge file or multiple files for psth evens\n' )
-                return 
+                return
             ex_path = os.path.join(run_fld, flt_list[0])
-            
+
         else:
             # SY channel. could be on any probe, so get the probe string
             match_str = run_name + '_tcat.imec' + prb + '.ap.SY_*_6_*.txt'
@@ -73,9 +73,9 @@ def get_psth_events(args):
             flt_list = fnmatch.filter(file_list,match_str)
             if len(flt_list) != 1:
                 print('No edge file or multiple files for psth evens\n' )
-                return              
-            ex_file_name = flt_list[0]            
-            
+                return
+            ex_file_name = flt_list[0]
+
             ex_path = os.path.join(run_fld, ex_prb_fld_name, ex_file_name)
 
     # the CatGT extracted edge files are a single column with </n>
@@ -95,9 +95,10 @@ def get_psth_events(args):
     event_path = os.path.join(phy_dir, 'events.csv')
     nEvent = len(edgeTimes)
     with open(event_path, 'w') as outfile:
-        for i in range(0, nEvent-1):
-            outfile.write(f'{edgeTimes[i]:.6f},')
-        outfile.write(f'{edgeTimes[nEvent-1]:.6f}')
+        if nEvent>0:
+            for i in range(0, nEvent-1):
+                outfile.write(f'{edgeTimes[i]:.6f},')
+            outfile.write(f'{edgeTimes[nEvent-1]:.6f}')
 
     execution_time = time.time() - start
 
