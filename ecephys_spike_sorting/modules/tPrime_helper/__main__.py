@@ -57,6 +57,18 @@ def call_TPrime(args):
             if firstDash >= 0:
                 print(ni_str_list[i][firstDash+1:])
                 ni_ex_list.append(ni_str_list[i][firstDash+1:])
+        # need to get the file name from the directory in case user used the  
+        # -1 option to specify the digital channel     
+        # extracted ni files are in the run directory
+        match_XA_str = run_name + '_tcat.nidq.XA_*.txt'
+        match_XD_str = run_name + '_tcat.nidq.XD_*.txt'
+        match_iXA_str = run_name + '_tcat.nidq.iXA_*.txt'
+        match_iXD_str = run_name + '_tcat.nidq.iXD_*.txt'
+        file_list = os.listdir(run_directory)
+        ni_ex_files = fnmatch.filter(file_list,match_XA_str) + \
+                      fnmatch.filter(file_list,match_XD_str) + \
+                      fnmatch.filter(file_list,match_iXA_str) + \
+                      fnmatch.filter(file_list,match_iXD_str)
                         
     
     im_ex_string = args['tPrime_helper_params']['im_ex_list']
@@ -152,21 +164,37 @@ def call_TPrime(args):
         
         if len(matchI) == 1:
             # get params
-            c_type, c_prb, c_ex_name = catGT_ex_params_from_str(ni_sync_params)
+          
+            # build match string to find file of NI sync edges
+            # for the digital channel match string uses a wild card
+            # '*" character for the word parameter
+            c_type, c_prb, c_ex_name = catGT_ex_params_from_str(ni_sync_params)            
             c_name = run_name + '_tcat.nidq.' + c_ex_name + '.txt'
-            from_list.append(os.path.join(run_directory, c_name))
+            c_name_match = fnmatch.filter(ni_ex_files, c_name) 
+            
+            if len(c_name_match) == 1:
+                # add to list of from_files for TPrime
+                from_list.append(os.path.join(run_directory, c_name_match[0]))
+                
+                # remove from list of ni_ex_files. The other files will be added to events list
+                ni_ex_files.remove(c_name_match[0])
+                
+            else:
+                print('No match or multiple matches for ni sync file in Tprime_helper.' )           
+            
+            #index for this from stream
             c_index = len(from_stream_index)
-            #remove from list
-            del ni_ex_list[matchI[0]]
+            
             # loop over the remaining files of edges extracted from NI,
             # add to events_list and out_file
-            for ex_str in ni_ex_list:
+            for ex_file in ni_ex_files:
                 # get params
-                c_type, c_prb, c_ex_name = catGT_ex_params_from_str(ex_str) 
-                c_name = run_name + '_tcat.nidq.' + c_ex_name + '.txt'
-                events_list.append(os.path.join(run_directory, c_name))
+                events_list.append(os.path.join(run_directory, ex_file))
                 from_stream_index.append(c_index)
-                c_output_name = run_name + '_tcat.nidq.' + c_ex_name + '.adj.txt'
+                
+                # get position of extension in this ex_file name
+                ext_pos = ex_file.find('.txt')                
+                c_output_name = ex_file[0:ext_pos] + '.adj.txt'                
                 out_file = os.path.join(run_directory, c_output_name)
                 out_list.append(out_file) 
         else:
@@ -177,10 +205,11 @@ def call_TPrime(args):
         # toStream is NI
         # build path to the the sync file
         c_name = run_name + '_tcat.nidq.' + toStream_ex_name + '.txt'
-        toStream_path = os.path.join(run_directory, c_name)
+        c_name_match = fnmatch.filter(ni_ex_files, c_name) 
+        toStream_path = os.path.join(run_directory, c_name_match[0])
 
         # build list of event files, include: 
-        #   all files of spike times, except for those in a to stream
+        #   all files of spike times
         #   no NI files, because they are already in the "toStream"
 
         # loop over all SY files
@@ -191,12 +220,12 @@ def call_TPrime(args):
             # These are imec SYNC channels
             # need to get the file name from the directory in case user used the  
             # -1 option to specify the last channel in the file 
-            prb_dir = prb_dir_prefix + str(toStream_prb)
-            match_str = run_name + '_tcat.imec' + str(toStream_prb) + '.ap.SY_*_6_*.txt'
+            prb_dir = prb_dir_prefix + str(c_prb)
+            match_str = run_name + '_tcat.imec' + str(c_prb) + '.ap.SY_*_6_*.txt'
             file_list = os.listdir(os.path.join(run_directory,prb_dir))
             flt_list = fnmatch.filter(file_list,match_str)
             if len(flt_list) != 1:
-                print('No edge file or multiple files for toStream found\n' )
+                print('No edge file or multiple files for fromStream found\n' )
                 return              
             c_name = flt_list[0]
            
@@ -269,11 +298,13 @@ def call_TPrime_3A(args):
 
     # call TPrime for 3A data
     # assumes no nidq stream
-    # uses full paths rather than building paths
+    # incoming paths are to the catGT output folder; for the toStream and
+    # the fromStreams, find the file of extracted edges that matches
+    # the toStream_params
     # inputs:
     # full path to Tprime executable
-    # path to "to stream" sync edges ("to stream" = the reference stream for the data set)
-    # paths to "from stream" sync edges and text files of events
+    # path to "toStream" catGT output, plus the "toStream_params"
+    # paths to "from stream" catGT output folders
     
     # bNPY, if True, no text files of spike times will be written
     bNPY = True
@@ -286,34 +317,53 @@ def call_TPrime_3A(args):
     start = time.time()
 
     # for twStream, get the spike events and convert to seconds
-    toStream_path = args['tPrime_helper_params']['toStream_path_3A']
-    toStream_parent, toStream_name = os.path.split(toStream_path)
+    toStream_parent = args['tPrime_helper_params']['toStream_path_3A']
+    
+    #
+    toStream_params = args['tPrime_helper_params']['toStream_sync_params']
+    
+    c_type, c_prb, c_ex_name = catGT_ex_params_from_str(toStream_params)
+    match_str = '*_tcat.imec.ap.' + c_ex_name + '.txt'   # will be used for both toStream and fromStream(s)
+    print(toStream_parent)
+    print(match_str)
+    file_list = os.listdir(toStream_parent)
+    flt_list = fnmatch.filter(file_list,match_str)
+    if len(flt_list) != 1:
+        print('No edge file or multiple files for toStream found\n' )
+        return              
+    toStream_name = flt_list[0]
+    toStream_path = os.path.join(toStream_parent, toStream_name)
 
     from_list = args['tPrime_helper_params']['fromStream_list_3A']       # list of files of sync edges for streams to translate to reference
+    fS_file_list = list()
     events_list = list()     # list of files of event times to translate to reference
     from_stream_index = list()     # list of indicies matching event files to a from stream
     out_list = list()    # list of paths for output files, one per event file
 
     # convert events in the toStream to sec; they will not be adjusted
     # search the directory the edges file to get the ks2 output
-    fileList = os.listdir(toStream_parent)
-
     # get name of ks2 output dir and convert to sec
-    ks_outdir = fnmatch.filter(fileList, 'imec_*_ks2')[0]
+    ks_outdir = fnmatch.filter(file_list, 'imec_*_ks2')[0]
     st_file = os.path.join(toStream_parent, ks_outdir, 'spike_times.npy')
     toStream_events_sec = spike_times_npy_to_sec(st_file, 0, bNPY)
     # for later data analysis with spike times as sec, also save as npy
     if not bNPY:
         spike_times_sec_to_npy(toStream_events_sec)
 
-    # fromStreams are just the list provided by the caller for these,
-    # convert only the spike times. For 3A, other digital channels are copies
+    # for each member of from_list, find the edge file in that directory, and
+    # adjust only the spike times. For 3A, other digital channels are copies
     # of those in the toStream
 
-    for fS in from_list:
-        fS_parent, fS_name = os.path.split(fS)
-        fileList = os.listdir(fS_parent)
-        ks_outdir = fnmatch.filter(fileList, 'imec_*_ks2')[0]
+    
+    for fS_parent in from_list:
+        file_list = os.listdir(fS_parent)
+        flt_list = fnmatch.filter(file_list,match_str)
+        if len(flt_list) != 1:
+            print('No edge file or multiple files for fromStream found\n' )
+            return              
+        fS_name = flt_list[0]
+        fS_file_list.append(os.path.join(fS_parent,fS_name))
+        ks_outdir = fnmatch.filter(file_list, 'imec_*_ks2')[0]
         st_file = os.path.join(fS_parent, ks_outdir, 'spike_times.npy')
         st_file_sec = spike_times_npy_to_sec(st_file, 0, bNPY)
         events_list.append(st_file_sec)
@@ -328,7 +378,7 @@ def call_TPrime_3A(args):
     print('toStream:')
     print(toStream_path)
     print('fromStream')
-    for fp in from_list:
+    for fp in fS_file_list:
         print(fp)
     print('event files')
     for i, ep in enumerate(events_list):
@@ -337,13 +387,21 @@ def call_TPrime_3A(args):
     for op in out_list:
         print(op)
 
-    exe_path = os.path.join(args['tPrime_helper_params']['tPrime_path'], 'runit')
+    # path to the 'runit.bat' executable that calls TPrime.
+    # Essential in linux where TPrime executable is only callable through runit
+    if sys.platform.startswith('win'):
+        exe_path = os.path.join(args['tPrime_helper_params']['tPrime_path'], 'runit.bat')
+    elif sys.platform.starstwith('linux'):
+        exe_path = os.path.join(args['tPrime_helper_params']['tPrime_path'], 'runit.sh')
+    else:
+        print('unknown system, cannot run TPrime')  
+        
     sync_period = args['tPrime_helper_params']['sync_period']
 
     tcmd = exe_path + ' -syncperiod=' + repr(sync_period) + \
         ' -tostream=' + toStream_path
 
-    for i, fp in enumerate(from_list):
+    for i, fp in enumerate(fS_file_list):
         tcmd = tcmd + ' -fromstream=' + repr(i) + ',' + fp
 
     for i, ep in enumerate(events_list):
