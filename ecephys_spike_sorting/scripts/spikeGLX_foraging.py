@@ -38,7 +38,7 @@ logName = 'foraging_ephys_log.csv'
 
 # Raw data directory = npx_directory
 # run_specs = name, gate, trigger and probes to process
-npx_directory = r'D:\Data\Ephys\HH09'
+npx_directory = r'F:\ephys_raw\HH09'
 
 # Each run_spec is a list of 4 strings:
 #   undecorated run name (no g/t specifier, the run field in CatGT)
@@ -52,11 +52,12 @@ npx_directory = r'D:\Data\Ephys\HH09'
 
 run_specs = [
 
-            # ['HH09_S07_20210611_surface', '0', '0,0', '0:1', ['cortex', 'cortex']],
             ['HH09_S06_20210609', '0', '0,0', '0:1', ['cortex', 'cortex']],
+            ['HH09_S07_20210611_surface', '0', '0,0', '0:1', ['cortex', 'cortex']],
+            ['HH09_S07_20210611', '0', '0,0', '0:1', ['cortex', 'cortex']],
             ['HH09_S08_20210612', '0', '0,0', '0:1', ['cortex', 'cortex']],
             ['HH09_S09_20210613', '0', '0,0', '0:1', ['cortex', 'cortex']],
-            ['HH09_S07_20210611', '0', '0,0', '0:1', ['cortex', 'cortex']],
+            ['HH09_S10_20210614', '0', '0,0', '0', ['midbrain']],
 
 ]
 
@@ -66,7 +67,7 @@ run_specs = [
 # Set to an existing directory; all output will be written here.
 # Output will be in the standard SpikeGLX directory structure:
 # run_folder/probe_folder/*.bin
-catGT_dest = r'F:\catGT\HH09'
+catGT_dest = r'I:\catGT\HH09'
 
 # ------------
 # CatGT params
@@ -99,13 +100,16 @@ ni_sync = f'XD={n_XAs},0,500'      # Sync channel in NIDQ
 
 ni_extract_string = (
                     f'-{ni_sync} '    # Sync pulse in nidq file: word {a=1 in Dave's rig now}, threshold {b=1}V, min {c=3}V, pulse width {d=500} ms
-                    f'-XD={n_XAs},2,1 '   # Dig marker (actual bit code): 1 ms width
-                    f'-XD={n_XAs},2,1.5 '   # Dig marker (start of bit code): word 4, bit 1, 1.5 ms
-                    f'-XD={n_XAs},2,2 '   # Dig marker (Choice_L): 2 ms width
-                    f'-XD={n_XAs},2,2.5 '   # Dig marker (Choice_R): 2.5 ms
-                    f'-XD={n_XAs},2,10 '   # Dig marker (go cue): 10 ms width
-                    f'-XD={n_XAs},2,20 '   # Dig marker (reward): 20 ms width
-                    f'-XD={n_XAs},2,30 '   # Dig marker (ITI start): 30 ms
+                    f'-XD={n_XAs},1,0 '   # bpod-trial start
+                    f'-XD={n_XAs},2,1 '   # actual bit code: 1 ms width
+                    f'-XD={n_XAs},2,1.5 '  # start of bit code: word 4, bit 1, 1.5 ms
+                    f'-XD={n_XAs},2,2 '    # Choice_L: 2    ms width
+                    f'-XD={n_XAs},2,2.5 '  # Choice_R: 2.5 ms
+                    f'-XD={n_XAs},2,10 '   # go cue: 10 ms width
+                    f'-XD={n_XAs},2,20 '   # reward: 20 ms width
+                    f'-XD={n_XAs},2,30 '   # ITI start: 30 ms
+                    f'-XD={n_XAs},4,0 '   # Zaber movement (rising)
+                    f'-iXD={n_XAs},4,0 '  # Zaber movement (falling)
                     f'-XD={n_XAs},5,0 '   # Camera 1 (300 Hz)
                     f'-XD={n_XAs},6,0 '   # Camera 2 (300 Hz)
                     f'-XD={n_XAs},7,0 '   # Camera 3 (300 Hz)
@@ -159,7 +163,7 @@ modules = [
     'quality_metrics'
 ]
 
-json_directory = r'F:\json_file'
+json_directory = r'I:\json_file'
 
 # -----------------------
 # -----------------------

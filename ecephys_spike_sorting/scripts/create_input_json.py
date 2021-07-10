@@ -81,7 +81,7 @@ def createInputJson(output_file,
 
 
     # for config files and kilosort working space
-    kilosort_output_tmp = r'D:\kilosort_datatemp'
+    kilosort_output_tmp = r'I:\kilosort_datatemp'
 
 
     # derived directory names
