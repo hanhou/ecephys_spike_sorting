@@ -101,13 +101,13 @@ ni_sync = f'XD={n_XAs},0,500'      # Sync channel in NIDQ
 ni_extract_string = (
                     f'-{ni_sync} '    # Sync pulse in nidq file: word {a=1 in Dave's rig now}, threshold {b=1}V, min {c=3}V, pulse width {d=500} ms
                     f'-XD={n_XAs},1,0 '   # bpod-trial start
-                    f'-XD={n_XAs},2,1 '   # actual bit code: 1 ms width
-                    f'-XD={n_XAs},2,1.5 '  # start of bit code: word 4, bit 1, 1.5 ms
-                    f'-XD={n_XAs},2,2 '    # Choice_L: 2    ms width
-                    f'-XD={n_XAs},2,2.5 '  # Choice_R: 2.5 ms
-                    f'-XD={n_XAs},2,10 '   # go cue: 10 ms width
-                    f'-XD={n_XAs},2,20 '   # reward: 20 ms width
-                    f'-XD={n_XAs},2,30 '   # ITI start: 30 ms
+                    f'-XD={n_XAs},2,10 '   # actual bit code: 10 ms width
+                    f'-XD={n_XAs},2,20 '   # start of bit code: word 4, bit 1, 20 ms
+                    f'-XD={n_XAs},2,1 '    # Choice_L: 1 ms width
+                    f'-XD={n_XAs},2,2 '  # Choice_R: 2 ms
+                    f'-XD={n_XAs},2,5 '   # go cue: 5 ms width
+                    f'-XD={n_XAs},2,30 '   # reward: 30 ms width
+                    f'-XD={n_XAs},2,40 '   # ITI start: 40 ms
                     f'-XD={n_XAs},4,0 '   # Zaber movement (rising)
                     f'-iXD={n_XAs},4,0 '  # Zaber movement (falling)
                     f'-XD={n_XAs},5,0 '   # Camera 1 (300 Hz)
